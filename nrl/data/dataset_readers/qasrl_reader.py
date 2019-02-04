@@ -8,7 +8,6 @@ import gzip
 
 from overrides import overrides
 
-from allennlp.common import Params
 from allennlp.common.file_utils import cached_path
 from allennlp.data.dataset_readers.dataset_reader import DatasetReader
 from allennlp.data.instance import Instance
@@ -188,17 +187,3 @@ class QaSrlReader(DatasetReader):
             return max_items[0]
 
         return max(max_items, key = lambda x: x.size())
-
-    @classmethod
-    def from_params(cls, params: Params) -> 'QaSrlReader':
-        token_indexers = TokenIndexer.dict_from_params(params.pop('token_indexers', Params({"tokens": {"type": "single_id", "lowercase_tokens": True}})))
-        has_provinence = params.pop("has_provinence", False)
-        bio_labels = params.pop("bio_labels", False)
-
-        min_answers = params.pop("min_answers", 3)
-        min_valid_answers = params.pop("min_valid_answers", 3)
-
-        question_sources = params.pop("question_sources", None)
-
-        params.assert_empty(cls.__name__)
-        return QaSrlReader(token_indexers=token_indexers, has_provinence = has_provinence, bio_labels=bio_labels, min_answers=min_answers, min_valid_answers=min_valid_answers, question_sources=question_sources)

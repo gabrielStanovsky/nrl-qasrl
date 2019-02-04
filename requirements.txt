@@ -1,0 +1,3 @@
+gevent
+allennlp
+networkx

@@ -1,0 +1,63 @@
+{
+  "dataset_reader": {
+    "type": "qasrl",
+    "token_indexers": {
+      "bert": {
+        "type": "bert-pretrained",
+        "pretrained_model": "bert-base-uncased",
+        "do_lowercase": true,
+        "use_starting_offsets": true
+      },
+      "token_characters": {
+        "type": "characters",
+        "min_padding_length": 3
+      }
+    },
+  },
+
+  "train_data_path": std.extVar("QASRL2_TRAIN"),
+  "validation_data_path": std.extVar("QASRL2_DEV"),
+  "test_data_path": std.extVar("QASRL2_TEST"),
+  "model": {
+    "type": "span_detector",
+    "text_field_embedder": {
+      "allow_unmatched_keys": true,
+      "embedder_to_indexer_map": {
+        "bert": ["bert", "bert-offsets"],
+        "token_characters": ["token_characters"],
+      },
+      "token_embedders": {
+        "bert": {
+          "type": "bert-pretrained",
+          "pretrained_model": "bert-base-uncased" 
+        }
+      }
+    },
+    "stacked_encoder": {
+      "type": "alternating_lstm",
+      "use_highway": true,
+      "input_size": 868,
+      "hidden_size": 300,
+      "num_layers": 8,
+      "recurrent_dropout_probability": 0.1
+    },
+    "predicate_feature_dim":100,
+    "hidden_dim":100
+  },
+  "iterator": {
+    "type": "bucket",
+    "sorting_keys": [["text", "num_tokens"]],
+    "batch_size" : 80
+  },
+  "trainer": {
+    "num_epochs": 200,
+    "grad_norm": 1.0,
+    "patience": 10,
+    "validation_metric": "+fscore-at-0.5",
+    "cuda_device": std.parseInt(std.extVar("CUDA_DEVICE")),
+    "optimizer": {
+      "type": "adadelta",
+      "rho": 0.95
+    }
+  }
+}

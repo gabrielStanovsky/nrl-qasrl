@@ -62,11 +62,14 @@ class SpanDetector(Model):
         embedded_text_with_predicate_indicator = torch.cat([embedded_text_input, embedded_predicate_indicator], -1)
         batch_size, sequence_length, embedding_dim_with_predicate_feature = embedded_text_with_predicate_indicator.size()
 
-        if self.stacked_encoder.get_input_dim() != embedding_dim_with_predicate_feature:
-            raise ConfigurationError("The SRL model uses an indicator feature, which makes "
+        stacked_encoder_dim = self.stacked_encoder.get_input_dim()
+        if stacked_encoder_dim != embedding_dim_with_predicate_feature:
+            import pdb
+            pdb.set_trace()
+            raise ConfigurationError(f"The SRL model uses an indicator feature, which makes "
                                      "the embedding dimension one larger than the value "
-                                     "specified. Therefore, the 'input_dim' of the stacked_encoder "
-                                     "must be equal to total_embedding_dim + 1.")
+                                     "specified. Therefore, the 'input_dim' of the stacked_encoder ({stacked_encoder_dim})"
+                                     "must be equal to total_embedding_dim + 1. ({embedding_dim_with_predicate_feature})")
 
         encoded_text = self.stacked_encoder(embedded_text_with_predicate_indicator, mask)
         span_hidden, span_mask = self.span_hidden(encoded_text, encoded_text, mask, mask)
@@ -200,7 +203,7 @@ class SpanDetector(Model):
     @classmethod
     def from_params(cls, vocab: Vocabulary, params: Params) -> 'SpanDetector':
         embedder_params = params.pop("text_field_embedder")
-        text_field_embedder = TextFieldEmbedder.from_params(vocab, embedder_params)
+        text_field_embedder = TextFieldEmbedder.from_params(vocab = vocab, params = embedder_params)
         stacked_encoder = Seq2SeqEncoder.from_params(params.pop("stacked_encoder"))
         predicate_feature_dim = params.pop("predicate_feature_dim")
         dim_hidden = params.pop("hidden_dim", 100)
